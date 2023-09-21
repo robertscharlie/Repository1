@@ -1,4 +1,4 @@
 print("Hello World!")
-x = False
-if x == True:
+x = True
+if x:
     print("HI")
