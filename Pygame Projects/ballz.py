@@ -11,11 +11,11 @@ screen = pygame.display.set_mode(resolution)
 
 
 class ball(pygame.sprite.Sprite):
-    def __init__(self, colour, x, y, mousepos):
+    def __init__(self, colour, x, y, mousepos, width):
         super().__init__()
 
-        self.width = 10
-        self.height = 10
+        self.width = width
+        self.height = width
 
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill(colour)
@@ -32,17 +32,20 @@ class ball(pygame.sprite.Sprite):
         self.direction = direction
 
     def update(self):
-        self.actualx += (score // 20 + 1) * 3 * int(self.direction[0] * 100)
-        self.actualy += (score // 20 + 1) * 3 * int(self.direction[1] * 100)
+        self.actualx += (score / 20 + 1) * 3 * int(self.direction[0] * 100)
+        self.actualy += (score / 20 + 1) * 3 * int(self.direction[1] * 100)
 
         self.rect.centerx = self.actualx / 100
         self.rect.centery = self.actualy / 100
 
-        if self.rect.centerx > resolution[0] - 5 or self.rect.centerx < 5:
+        if (
+            self.rect.centerx > resolution[0] - self.width // 2
+            or self.rect.centerx < self.width // 2
+        ):
             self.direction[0] *= -1
         if self.rect.y < 50:
             self.direction[1] *= -1
-        if self.rect.y > resolution[1] - 35:
+        if self.rect.y > resolution[1] - 25 - self.height:
             finalballpos.append(self.rect.centerx)
             self.kill()
 
@@ -54,6 +57,7 @@ class ball(pygame.sprite.Sprite):
             else:
                 self.direction[0] *= -1
             block.health -= 1
+            break
 
 
 class block(pygame.sprite.Sprite):
@@ -120,7 +124,7 @@ coins = pygame.sprite.Group()
 
 
 def generateBall(mousepos):
-    balls.add(ball("white", startpos[0], startpos[1], mousepos))
+    balls.add(ball("white", startpos[0], startpos[1], mousepos, ballwidth))
 
 
 def moveBlocks():
@@ -134,7 +138,7 @@ def moveBlocks():
         coins.draw(screen)
     for i in range(7):
         n = random.randint(1, 10)
-        if n >= 7:
+        if n >= 8:
             blocks.add(
                 block(
                     "white",
@@ -153,35 +157,20 @@ def moveBlocks():
             )
 
 
-# Game Setup
-for i in range(7):
-    for j in range(2):
-        n = random.randint(1, 15)
-        if n >= 10:
-            blocks.add(
-                block(
-                    "white",
-                    25 + i * 45,
-                    120 + j * 45,
-                    random.randint(1, 2),
-                )
-            )
-        elif n == 1:
-            coins.add(
-                coin(
-                    "white",
-                    25 + i * 45,
-                    120 + j * 45,
-                )
-            )
-
 # Game Variables
+ballwidth = 12
+
 simulating = False
 score = 1
-ballNumber = 3
-startpos = [resolution[0] // 2, resolution[1] - 30]
+ballNumber = 1
+startpos = [resolution[0] // 2, resolution[1] - 25 - ballwidth // 2]
 queue = []
 finalballpos = []
+
+
+# Game Setup
+for i in range(2):
+    moveBlocks()
 
 clock = pygame.time.Clock()
 while True:
@@ -246,7 +235,12 @@ while True:
             pygame.draw.rect(
                 screen,
                 "white",
-                pygame.Rect(finalballpos[0], startpos[1] - 5, 10, 10),
+                pygame.Rect(
+                    finalballpos[0] - ballwidth // 2,
+                    startpos[1] - ballwidth // 2,
+                    ballwidth,
+                    ballwidth,
+                ),
             )
 
     if not simulating:
@@ -258,14 +252,19 @@ while True:
         pygame.draw.line(
             screen,
             "white",
-            (startpos[0] + 5, startpos[1]),
+            (startpos[0], startpos[1]),
             (pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]),
-            2,
+            1,
         )
         pygame.draw.rect(
             screen,
             "white",
-            pygame.Rect(startpos[0], startpos[1] - 5, 10, 10),
+            pygame.Rect(
+                startpos[0] - ballwidth // 2,
+                startpos[1] - ballwidth // 2,
+                ballwidth,
+                ballwidth,
+            ),
         )
 
     pygame.display.flip()
